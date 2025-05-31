@@ -1,0 +1,105 @@
+﻿@{
+    ViewData["Title"] = "Chat Ollama";
+}
+
+<h1>Chat Ollama - Funções</h1>
+
+<div style="max-width:600px; margin:auto;">
+    <label for="inputTexto">Digite o termo, frase ou texto:</label><br/>
+    <input type="text" id="inputTexto" style="width:100%; padding:8px;" placeholder="Digite aqui..." />
+
+    <br/><br/>
+
+    <button id="btnExplica" style="width:100%; padding:10px; margin-bottom:10px;">Explica esse termo</button>
+    <button id="btnSentimento" style="width:100%; padding:10px; margin-bottom:10px;">Análise de Sentimento</button>
+
+    <hr />
+
+    <label for="inputArquivo">Selecione um arquivo TXT ou PDF para resumir:</label><br/>
+    <input type="file" id="inputArquivo" accept=".txt,.pdf" />
+
+    <button id="btnResumo" style="width:100%; padding:10px; margin-top:10px;">Resumo de Documento</button>
+
+    <hr />
+
+    <h3>Resposta:</h3>
+    <pre id="output" style="background:#f4f4f4; padding:15px; min-height:150px;"></pre>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBase = '/api/chat';
+
+        const output = document.getElementById('output');
+        const inputTexto = document.getElementById('inputTexto');
+        const inputArquivo = document.getElementById('inputArquivo');
+
+        document.getElementById('btnExplica').onclick = async () => {
+            const termo = inputTexto.value.trim();
+            if (!termo) {
+                alert('Digite um termo para explicar.');
+                return;
+            }
+
+            const response = await fetch(`${apiBase}/explica`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ termo })
+            });
+
+            if (!response.ok) {
+                output.textContent = `Erro: ${response.status} - ${response.statusText}`;
+                return;
+            }
+
+            const data = await response.json();
+            output.textContent = data.explicacao || "Sem resposta.";
+        };
+
+        document.getElementById('btnSentimento').onclick = async () => {
+            const frase = inputTexto.value.trim();
+            if (!frase) {
+                alert('Digite uma frase para analisar.');
+                return;
+            }
+
+            const response = await fetch(`${apiBase}/sentimento`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frase })
+            });
+
+            if (!response.ok) {
+                output.textContent = `Erro: ${response.status} - ${response.statusText}`;
+                return;
+            }
+
+            const data = await response.json();
+            output.textContent = `Sentimento detectado: ${data.sentimento}`;
+        };
+
+        document.getElementById('btnResumo').onclick = async () => {
+            if (!inputArquivo.files.length) {
+                alert('Selecione um arquivo para resumir.');
+                return;
+            }
+
+            const file = inputArquivo.files[0];
+            const formData = new FormData();
+            formData.append('arquivo', file);
+
+            const response = await fetch(`${apiBase}/resumo`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                output.textContent = `Erro: ${response.status} - ${response.statusText}`;
+                return;
+            }
+
+            const data = await response.json();
+            output.textContent = data.resumo || "Sem resposta.";
+        };
+    </script>
+}

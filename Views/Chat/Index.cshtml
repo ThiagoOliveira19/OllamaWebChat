@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Chat Ollama";
+}
+
+<h1>Chat Ollama - Funções</h1>
+
+<label for="inputMessage">Digite o termo, frase ou texto:</label><br/>
+<input type="text" id="inputMessage" style="width:400px;" />
+<button id="btnEnviar">Enviar</button>
+
+<h3>Resposta:</h3>
+<pre id="resposta"></pre>
+
+<script>
+document.getElementById('btnEnviar').addEventListener('click', async () => {
+    const mensagem = document.getElementById('inputMessage').value;
+    if (!mensagem) {
+        alert('Por favor, digite uma mensagem.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/chat/explica', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Message: mensagem })
+        });
+
+        const text = await response.text();  // pega o texto cru
+        console.log('Resposta bruta do servidor:', text);
+
+        try {
+            const data = JSON.parse(text);
+            document.getElementById('resposta').textContent = data.resposta || 'Nenhuma resposta.';
+        } catch (err) {
+            console.error('Erro ao converter resposta em JSON:', err);
+            document.getElementById('resposta').textContent = 'Erro ao processar resposta do servidor.';
+        }
+
+    } catch (error) {
+        console.error('Erro na requisição fetch:', error);
+        document.getElementById('resposta').textContent = 'Erro na comunicação com o servidor.';
+    }
+});
+</script>
